@@ -26,7 +26,7 @@ war {
                 'System-JDK': "${System.getProperty('java.version')} (${System.getProperty('java.specification.vendor')})",
                 'Build-JDK-Version': javaVersion,
                 'Gradle-Version': gradleVersion,
-                'Created-By': 'jechun@jdinscorp.com',
+                'Created-By': 'Son',
                 'Create-Date': new Date().format('yyyy-MM-dd HH:mm:ss').toString()
     }
 }
