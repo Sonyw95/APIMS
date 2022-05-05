@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration scan="true" scanPeriod="30 seconds">
+	<!-- dev  -->
+	<appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>C:\api\log-${jvmRoute}.log</file>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>C:\api\log-${jvmRoute}.%d{yyyy-MM-dd}.log</fileNamePattern>
+			<maxHistory>2</maxHistory>
+		</rollingPolicy>
+		<encoder>
+			<pattern>%d  %X{req.remoteHost} %X{req.requestURI} [%-5level] [%thread] %logger{100}[%method:%line] - %msg %n</pattern>
+		</encoder>
+	</appender>
+
+
+	<logger name="org.ezdevgroup.ezframework.intercepter.aspect.LoggingAspect" level="ERROR" />
+
+	<logger name="org.springframework.beans.factory.support.DefaultListableBeanFactory" level="ERROR" />
+	<logger name="org.springframework.security.util.FilterChainProxy" level="ERROR" />
+	<logger name="org.springframework.security.context.HttpSessionContextIntegrationFilter" level="ERROR" />
+	<logger name="org.springframework.security.wrapper.SavedRequestAwareWrapper" level="ERROR" />
+	<logger name="org.springframework.jdbc.datasource.DataSourceUtils" level="ERROR" />
+	<logger name="org.springframework.web.servlet.view.ContentNegotiatingViewResolver" level="ERROR" />
+	<logger name="org.springframework.core.io.support.PathMatchingResourcePatternResolver" level="ERROR" />
+	<logger name="org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider" level="ERROR" />
+	<logger name="org.springframework.core.io.support.PathMatchingResourcePatternResolver" level="ERROR" />
+	<logger name="org.springframework.beans.factory.xml.PluggableSchemaResolver" level="ERROR" />
+	<logger name="org.springframework.aop.framework.CglibAopProxy" level="ERROR" />
+	<logger name="org.springframework.web.context.support.StandardServletEnvironment" level="ERROR" />
+	<logger name="org.springframework.security.web.FilterChainProxy" level="ERROR" />
+    <logger name="org.springframework.beans.factory.annotation.InjectionMetadata" level="ERROR" />
+    <logger name="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping" level="DEGUB" />
+    <logger name="org.mybatis.spring.SqlSessionUtils" level="DEGUB" />
+
+
+	<logger name="jdbc.sqltiming" level="DEGUB" />
+	<logger name="jdbc.resultset" level="DEGUB" />
+	<logger name="jdbc.audit" level="DEGUB" />
+
+
+
+
+	<root level="DEGUB">
+		<appender-ref ref="FILE" />
+	</root>
+</configuration>

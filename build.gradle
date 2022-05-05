@@ -1,0 +1,174 @@
+apply plugin: 'java'
+apply plugin: 'war'
+apply plugin: 'eclipse-wtp'
+
+ext {
+    javaVersion         = '1.8'
+    javaEncoding        = 'UTF-8'
+    gradleVersion       = '2.14.1'
+    servletVersion      = '3.1.0'
+    tilesVersion        = '3.0.8'
+    ezframeworkVersion	= '5.1.5.1-SNAPSHOT'
+    springVersion       = '4.0.9.RELEASE'
+    targetServer = project.hasProperty('target') ? project.getProperty('target') : 'local'
+}
+
+sourceCompatibility = javaVersion
+targetCompatibility = javaVersion
+webAppDirName = 'webapp'
+
+version = '1.0.0-SNAPSHOT'
+war {
+    archiveName = "${baseName}.${extension}"
+    manifest {
+        attributes  'Implementation-Title': archivesBaseName,
+                'Implementation-Version': version,
+                'System-JDK': "${System.getProperty('java.version')} (${System.getProperty('java.specification.vendor')})",
+                'Build-JDK-Version': javaVersion,
+                'Gradle-Version': gradleVersion,
+                'Created-By': 'jechun@jdinscorp.com',
+                'Create-Date': new Date().format('yyyy-MM-dd HH:mm:ss').toString()
+    }
+}
+
+
+repositories {
+    mavenCentral()
+    maven {
+        url = uri('http://180.67.0.251:8081/nexus/content/groups/public/')
+        allowInsecureProtocol = true
+    }
+}
+
+dependencies {
+
+    //*********************************************************
+    // 기본 의존 프레임 워크는 이후 자체개발 프레임워크로 ReBuild
+    //*********************************************************
+    implementation "org.ezdevgroup:ezframework-web:$ezframeworkVersion"
+    implementation "org.ezdevgroup:ezframework-support:$ezframeworkVersion"
+    implementation "org.ezdevgroup:ezframework-tag:$ezframeworkVersion"
+    implementation "org.apache.commons:commons-lang3:3.3.2"
+
+    //*********************************************************
+    // 네이버 클라우드 플랫폼은 MariaDB를 지원
+    //*********************************************************
+    implementation "org.mariadb.jdbc:mariadb-java-client:2.1.2"
+
+    //*********************************************************
+    // 직관적인 db log를 확인하기 위한
+    //*********************************************************
+    implementation 'org.lazyluke:log4jdbc-remix:0.2.7'
+
+    //*********************************************************
+    // 추후 managerment 화면 구성을 위한 의존
+    //*********************************************************
+    implementation "org.apache.tiles:tiles-extras:$tilesVersion"
+    implementation "org.apache.tiles:tiles-jsp:$tilesVersion"
+    implementation "xerces:xercesImpl:2.8.1" // 얘는 취향
+
+    //*********************************************************
+    // Google Json ( Gson )
+    //*********************************************************
+    implementation group: 'com.google.code.gson', name: 'gson', version: '2.8.5'
+    implementation "com.googlecode.json-simple:json-simple:1.1"
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: '2.4.0'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.4.1.1'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.4.0'
+    implementation group: 'com.fasterxml.jackson.jaxrs', name: 'jackson-jaxrs-json-provider', version: '2.9.2'
+    implementation group: 'com.fasterxml.jackson.jaxrs', name: 'jackson-jaxrs-base', version: '2.4.0'
+    implementation group: 'com.fasterxml.jackson.module', name: 'jackson-module-jaxb-annotations', version: '2.4.0'
+
+    //*********************************************************
+    // Session의 DB 사용 ( Session 관리 용이 ) 근데.. 필요는 없을듯 api라면 혹시 모르니
+    //**********************************************************
+    implementation group : 'org.springframework.session', name: 'spring-session-jdbc', version: '2.1.7.RELEASE'
+    implementation group : 'org.springframework', name: 'spring-context-support', version : '5.1.5.RELEASE'
+
+
+    //*********************************************************
+    // 테스트 라이브러리 ( 고대의 도서관 )
+    //*********************************************************
+    //testImplementation "org.springframework:spring-test:$springVersion"
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+}
+
+//************************************************************
+// 이 아래부터는 빌드관련 설정.
+//************************************************************
+
+
+[compileJava, compileTestJava]*.options*.encoding = javaVersion
+
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds' // repository의 캐시 싱크 갱신 24시간동안 0초단위로 갱신.
+}
+
+eclipse {
+    wtp {
+        component {
+            contextPath = '/'
+        }
+        facet {
+            facet name: 'jst.web', version: servletVersion
+            facet name: 'jst.java', version: javaVersion
+        }
+    }
+}
+
+//*******************************************
+// Jenkins 빌드시 war파일 export관련
+//*******************************************
+
+sourceSets {
+    println(" ================================ sourceSets [ $targetServer ================================")
+
+
+    if("$targetServer" != "local"){
+        println(" ================================ sourceSets Start ================================ ")
+
+        copy {
+            /*
+                local, dev, real 서버의 프로퍼티를 따로 분활하여 관리할 예정, 그에 따른 Jenkins targetServer로 관리하여 빌드 최적화
+            */
+            from "src/main/resource/properties-$targetServer"
+            into "src/main/resource/properties"
+
+        }
+        delete "src/main/resource/properties-dev"
+        delete "src/main/resource/properties-real"
+    }
+}
+
+task copyTask(type: Copy){
+    println ("================================ copyTask One ================================")
+    copy{
+        from "src/main/resource/properties"
+        into "src/main/resource"
+        include 'logback.xml'
+    }
+}
+
+processResources {
+    from('src/main/java') {
+        include '**/*.xml'
+    }
+    into 'build/classes'
+    includeEmptyDirs = true
+}
+
+processTestResources {
+    from('src/test/java') {
+        include '**/*.xml'
+    }
+
+    into 'build/classes'
+
+    includeEmptyDirs = true
+}
+
+task Wrapper(type: Wrapper) {
+    description = 'Generates gradlew[.bat] scripts'
+    gradleVersion = gradleVersion
+}
